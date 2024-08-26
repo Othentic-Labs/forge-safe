@@ -111,6 +111,9 @@ abstract contract BatchScript is Script {
         } else if (chainId == 43114) {
             SAFE_API_BASE_URL = "https://safe-transaction-avalanche.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+        } else if (chainId == 17000) {
+            SAFE_API_BASE_URL = "https://transaction-holesky.holesky-safe.protofire.io/api/v1/safes/";
+            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else {
             revert("Unsupported chain");
         }
@@ -177,8 +180,8 @@ abstract contract BatchScript is Script {
 
     // Simulate then send the batch to the Safe API. If `send_` is `false`, the
     // batch will only be simulated.
-    function executeBatch(bool send_) internal {
-        Batch memory batch = _createBatch(safe);
+    function executeBatch(bool send_) internal returns (Batch memory batch) {
+        batch = _createBatch(safe);
         // _simulateBatch(safe, batch);
         if (send_) {
             batch = _signBatch(safe, batch);
@@ -277,7 +280,7 @@ abstract contract BatchScript is Script {
         placeholder.serialize("refundReceiver", address(0));
         placeholder.serialize("contractTransactionHash", batch_.txHash);
         placeholder.serialize("signature", batch_.signature);
-        string memory payload = placeholder.serialize("sender", msg.sender);
+        string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
 
         // Send batch
         (uint256 status, bytes memory data) = endpoint.post(
