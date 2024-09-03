@@ -114,6 +114,9 @@ abstract contract BatchScript is Script {
         } else if (chainId == 17000) {
             SAFE_API_BASE_URL = "https://transaction-holesky.holesky-safe.protofire.io/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+        } else if (chainId == 84532) {
+            SAFE_API_BASE_URL = "https://safe-transaction-base-sepolia.safe.global/api/v1/safes/";
+            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else {
             revert("Unsupported chain");
         }
