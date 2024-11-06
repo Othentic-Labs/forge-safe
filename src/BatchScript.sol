@@ -9,8 +9,10 @@ import {Script, console2, StdChains, stdJson, stdMath, StdStorage, stdStorageSaf
 
 import {Surl} from "../lib/surl/src/Surl.sol";
 
+import "./SetChains.s.sol";
+
 // ⭐️ SCRIPT
-abstract contract BatchScript is Script {
+abstract contract BatchScript is Script, SetChains {
     using stdJson for string;
     using Surl for *;
 
@@ -57,6 +59,8 @@ abstract contract BatchScript is Script {
     // Safe API base URL, configured by chain.
     string private SAFE_API_BASE_URL;
     string private constant SAFE_API_MULTISIG_SEND = "/multisig-transactions/";
+    string private MODE_SAFE_API_MULTISIG_SEND = "https://gateway.safe.optimism.io/v1/chains/34443/transactions/";
+    string private MODE_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
 
     // Wallet information
     bytes32 private walletType;
@@ -127,7 +131,7 @@ abstract contract BatchScript is Script {
             SAFE_API_BASE_URL = "https://safe-transaction-mantle.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else if (chainId == 34443) {
-            SAFE_API_BASE_URL = "https://gateway.safe.optimism.io/v1/chains/34443/safes";
+            SAFE_API_BASE_URL = "https://gateway.safe.optimism.io/v1/chains/34443/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else {
             revert("Unsupported chain");
@@ -284,17 +288,18 @@ abstract contract BatchScript is Script {
         string memory placeholder = "";
         placeholder.serialize("safe", safe_);
         placeholder.serialize("to", batch_.to);
-        placeholder.serialize("value", batch_.value);
+        placeholder.serialize("value", vm.toString(batch_.value));
         placeholder.serialize("data", batch_.data);
         placeholder.serialize("operation", uint256(batch_.operation));
-        placeholder.serialize("safeTxGas", batch_.safeTxGas);
-        placeholder.serialize("baseGas", batch_.baseGas);
-        placeholder.serialize("gasPrice", batch_.gasPrice);
-        placeholder.serialize("nonce", batch_.nonce);
+        placeholder.serialize("safeTxGas", vm.toString(batch_.safeTxGas));
+        placeholder.serialize("baseGas", vm.toString(batch_.baseGas));
+        placeholder.serialize("gasPrice", vm.toString(batch_.gasPrice));
+        placeholder.serialize("nonce", vm.toString(batch_.nonce));
         placeholder.serialize("gasToken", address(0));
         placeholder.serialize("refundReceiver", address(0));
-        placeholder.serialize("contractTransactionHash", batch_.txHash);
-        placeholder.serialize("signature", batch_.signature);
+        placeholder.serialize("contractTransactionHash", vm.toString(batch_.txHash));
+        placeholder.serialize("safeTxHash", vm.toString(batch_.txHash));
+        placeholder.serialize("signature", vm.toString(batch_.signature));
         string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
 
         // Send batch
@@ -472,6 +477,12 @@ abstract contract BatchScript is Script {
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
+      if ( chainId == 34443) return
+            string.concat(
+                MODE_SAFE_API_MULTISIG_SEND,
+                vm.toString(safe_),
+                MODE_SAFE_API_MULTISIG_SEND_SLUG
+            );
         return
             string.concat(
                 SAFE_API_BASE_URL,

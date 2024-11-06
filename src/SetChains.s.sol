@@ -25,6 +25,7 @@ contract SetChains is Script {
     setChain("manta", ChainData("manta", 169, ""));
     
     setChain("mode_sepolia", ChainData("mode_sepolia", 919, ""));
+    setChain("mode", ChainData("mode", 34443, ""));
 
   }
 }
