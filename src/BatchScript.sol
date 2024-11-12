@@ -61,7 +61,7 @@ abstract contract BatchScript is Script, SetChains {
     string private constant SAFE_API_MULTISIG_SEND = "/multisig-transactions/";
     string private MODE_SAFE_API_MULTISIG_SEND = "https://gateway.safe.optimism.io/v1/chains/34443/transactions/";
     string private MANTA_SAFE_API_MULTISIG_SEND = "https://gateway.safe.manta.network/v1/chains/169/transactions/";
-    string private OPTIMISMISH_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
+    string private OP_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
 
     // Wallet information
     bytes32 private walletType;
@@ -481,11 +481,11 @@ abstract contract BatchScript is Script, SetChains {
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
-      if ( _isOptimismishChain(chainId) ) return
+      if ( _isAnOptimismChain(chainId) ) return
             string.concat(
-                _getOptimismishSafeAPISendEndPoint(chainId),
+                _getOptimismSafeAPISendEndPoint(chainId),
                 vm.toString(safe_),
-                OPTIMISMISH_SAFE_API_MULTISIG_SEND_SLUG
+                OP_SAFE_API_MULTISIG_SEND_SLUG
             );
         return
             string.concat(
@@ -501,10 +501,10 @@ abstract contract BatchScript is Script, SetChains {
         return headers;
     }
 
-    function _isOptimismishChain(uint256 _chainId) private pure returns (bool) {
+    function _isAnOptimismChain(uint256 _chainId) private pure returns (bool) {
         return _chainId == 34443 || _chainId == 169;
     }
-    function _getOptimismishSafeAPISendEndPoint(uint256 _chainId) private view returns (string memory) {
+    function _getOptimismSafeAPISendEndPoint(uint256 _chainId) private view returns (string memory) {
         if (_chainId == 34443) return MODE_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 169) return MANTA_SAFE_API_MULTISIG_SEND;
         else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
