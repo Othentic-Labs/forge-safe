@@ -60,7 +60,8 @@ abstract contract BatchScript is Script, SetChains {
     string private SAFE_API_BASE_URL;
     string private constant SAFE_API_MULTISIG_SEND = "/multisig-transactions/";
     string private MODE_SAFE_API_MULTISIG_SEND = "https://gateway.safe.optimism.io/v1/chains/34443/transactions/";
-    string private MODE_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
+    string private MANTA_SAFE_API_MULTISIG_SEND = "https://gateway.safe.manta.network/v1/chains/169/transactions/";
+    string private OPTIMISEMISH_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
 
     // Wallet information
     bytes32 private walletType;
@@ -132,6 +133,9 @@ abstract contract BatchScript is Script, SetChains {
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else if (chainId == 34443) {
             SAFE_API_BASE_URL = "https://gateway.safe.optimism.io/v1/chains/34443/safes/";
+            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+         } else if (chainId == 169) {
+            SAFE_API_BASE_URL = "https://gateway.safe.manta.network/v1/chains/169/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else {
             revert("Unsupported chain");
@@ -477,11 +481,12 @@ abstract contract BatchScript is Script, SetChains {
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
-      if ( chainId == 34443) return
+      if ( _isOptimismishChain(chainId) ) return
             string.concat(
+                _getOptimisemishSafeAPISendEndPoint(chainId),
                 MODE_SAFE_API_MULTISIG_SEND,
                 vm.toString(safe_),
-                MODE_SAFE_API_MULTISIG_SEND_SLUG
+                OPTIMISEMiSH_SAFE_API_MULTISIG_SEND_SLUG
             );
         return
             string.concat(
@@ -495,5 +500,14 @@ abstract contract BatchScript is Script, SetChains {
         string[] memory headers = new string[](1);
         headers[0] = "Content-Type: application/json";
         return headers;
+    }
+
+    function _isOptimismishChain(uint256 _chainId) private pure returns (bool) {
+        return _chainId == 34443 || _chainId == 169;
+    }
+    function _getOptimisemishSafeAPISendEndPoint(uint256 _chainId) private pure returns (bool) {
+        if (_chainId == 34443) return MODE_SAFE_API_MULTISIG_SEND;
+        else if (_chainId = 169) return MANTA_SAFE_API_MULTISIG_SEND;
+        else return revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }
