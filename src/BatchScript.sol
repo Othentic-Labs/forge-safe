@@ -484,9 +484,8 @@ abstract contract BatchScript is Script, SetChains {
       if ( _isOptimismishChain(chainId) ) return
             string.concat(
                 _getOptimisemishSafeAPISendEndPoint(chainId),
-                MODE_SAFE_API_MULTISIG_SEND,
                 vm.toString(safe_),
-                OPTIMISEMiSH_SAFE_API_MULTISIG_SEND_SLUG
+                OPTIMISEMISH_SAFE_API_MULTISIG_SEND_SLUG
             );
         return
             string.concat(
@@ -505,9 +504,9 @@ abstract contract BatchScript is Script, SetChains {
     function _isOptimismishChain(uint256 _chainId) private pure returns (bool) {
         return _chainId == 34443 || _chainId == 169;
     }
-    function _getOptimisemishSafeAPISendEndPoint(uint256 _chainId) private pure returns (bool) {
+    function _getOptimisemishSafeAPISendEndPoint(uint256 _chainId) private view returns (string memory) {
         if (_chainId == 34443) return MODE_SAFE_API_MULTISIG_SEND;
-        else if (_chainId = 169) return MANTA_SAFE_API_MULTISIG_SEND;
-        else return revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
+        else if (_chainId == 169) return MANTA_SAFE_API_MULTISIG_SEND;
+        else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }
