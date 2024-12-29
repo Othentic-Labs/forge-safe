@@ -27,5 +27,8 @@ contract SetChains is Script {
     setChain("mode_sepolia", ChainData("mode_sepolia", 919, ""));
     setChain("mode", ChainData("mode", 34443, ""));
 
+    setChain("geth", ChainData("geth", 1337, "http://localhost:8545"));
+    setChain("othentic", ChainData("geth", 51001, "http://localhost:10002"));
+
   }
 }
