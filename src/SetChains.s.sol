@@ -30,5 +30,7 @@ contract SetChains is Script {
     setChain("geth", ChainData("geth", 1337, "http://localhost:8545"));
     setChain("othentic", ChainData("geth", 51001, "http://localhost:10002"));
 
+    setChain("beam_testnet", ChainData("beam_testnet", 31337, ""));
+
   }
 }
