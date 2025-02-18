@@ -6,13 +6,14 @@ pragma solidity >=0.6.2 <0.9.0;
 
 // 🧩 MODULES
 import {Script, console2, StdChains, stdJson, stdMath, StdStorage, stdStorageSafe, VmSafe} from "forge-std/Script.sol";
+import {StdCheats} from "forge-std/StdCheats.sol";
 
 import {Surl} from "../lib/surl/src/Surl.sol";
 
 import "./SetChains.s.sol";
 
 // ⭐️ SCRIPT
-abstract contract BatchScript is Script, SetChains {
+abstract contract BatchScript is Script, SetChains, StdCheats{
     using stdJson for string;
     using Surl for *;
 
@@ -316,7 +317,6 @@ abstract contract BatchScript is Script, SetChains {
             console2.log("Batch sent successfully");
         } else {
             console2.log(string(data));
-            revert("Send batch failed!");
         }
     }
 

@@ -32,5 +32,7 @@ contract SetChains is Script {
 
     setChain("beam_testnet", ChainData("beam_testnet", 13337, ""));
 
+    setChain("peaq_agung_testnet", ChainData("peaq_agung_testnet", 9990, ""));
+
   }
 }
