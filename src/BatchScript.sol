@@ -13,7 +13,7 @@ import {Surl} from "../lib/surl/src/Surl.sol";
 import "./SetChains.s.sol";
 
 // ⭐️ SCRIPT
-abstract contract BatchScript is Script, SetChains, StdCheats{
+abstract contract BatchScript is Script, SetChains{
     using stdJson for string;
     using Surl for *;
 
