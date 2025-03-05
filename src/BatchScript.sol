@@ -208,13 +208,6 @@ abstract contract BatchScript is Script, SetChains {
         // _simulateBatch(safe, batch);
         if (send_) {
             batch = _signBatch(safe, batch);
-            console2.log(unicode"═════════════════════════════════════════");
-            console2.log('\n[DEBUG](batch):');
-            console2.logBytes(abi.encode(batch));
-            console2.log('\n[DEBUG](safe):');
-            console2.logAddress(safe);
-            console2.log(unicode"\n═════════════════════════════════════════");
-
             _sendBatch(safe, batch);
         }
     }
@@ -315,21 +308,15 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("safeTxHash", vm.toString(batch_.txHash));
         placeholder.serialize("signature", vm.toString(batch_.signature));
         // string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
-        console2.log(unicode"════════════════════════════════════════════════════");
-        console2.log(unicode"═══ cast call ══════════════════════════════════════");
+        console2.log(unicode"\n═════ cast call ══════════════════════════════════════");
         {
-          console2.log("cast call --trace");
-          console2.logAddress(batch_.to);
-          console2.log(batch_.value);
-          console2.logBytes(batch_.data);
-          console2.logBytes( "1 0 0 0 0 0 ");
-          console2.log(batch_.nonce);
-          console2.logBytes(batch_.signature);
-
-          console2.log("\nSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
-          console2.log("function execTransaction(address to,uint256 value,bytes calldata data,Enum.Operation operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address payable refundReceiver,bytes memory signatures)");
+          string memory _callSig = "\"execTransaction(address,uint256,bytes calldata,Enum.Operation,uint256,uint256,uint256,address,address payable,bytes)\"";
+          string memory _populatedTx = string.concat("\ncast call --trace ", vm.toString(safe_), " ", _callSig, " ", vm.toString(batch_.to), " 0 ", vm.toString(batch_.data), " 1 0 0 0 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 ", vm.toString(batch_.signature), " --rpc-url ", vm.toString(block.chainid));
+          console2.log(_populatedTx);
+          console2.log("\n\tSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
+          console2.log("\n\tmethod sig:\n\tfunction execTransaction(\n\t\taddress to,\n\t\tuint256 value,\n\t\tbytes calldata data,\n\t\tEnum.Operation operation,\n\t\tuint256 safeTxGas,\n\t\tuint256 baseGas,\n\t\tuint256 gasPrice,\n\t\taddress gasToken,\n\t\taddress payable refundReceiver,\n\t\tbytes memory signatures)");
         }
-        console2.log(unicode"════════════════════════════════════════════════════");
+        console2.log(unicode"══════════════════════════════════════════════════════");
 
 
         // Send batch
