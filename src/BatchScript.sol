@@ -208,6 +208,13 @@ abstract contract BatchScript is Script, SetChains {
         // _simulateBatch(safe, batch);
         if (send_) {
             batch = _signBatch(safe, batch);
+            console2.log(unicode"═════════════════════════════════════════");
+            console2.log('\n[DEBUG](batch):');
+            console2.logBytes(abi.encode(batch));
+            console2.log('\n[DEBUG](safe):');
+            console2.logAddress(safe);
+            console2.log(unicode"\n═════════════════════════════════════════");
+
             _sendBatch(safe, batch);
         }
     }
@@ -232,7 +239,10 @@ abstract contract BatchScript is Script, SetChains {
         // Batch gas parameters can all be zero and don't need to be set
 
         // Get the safe nonce
-        batch.nonce = _getNonce(safe_);
+        (bool _ok, bytes memory _data) = address(safe_).call(abi.encodeWithSignature("nonce()"));
+        require(_ok, "Failed to get nonce");
+        batch.nonce = abi.decode(_data, (uint256));
+        // batch.nonce = _getNonce(safe_); 
 
         // Get the transaction hash
         batch.txHash = _getTransactionHash(safe_, batch);
@@ -304,20 +314,36 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("contractTransactionHash", vm.toString(batch_.txHash));
         placeholder.serialize("safeTxHash", vm.toString(batch_.txHash));
         placeholder.serialize("signature", vm.toString(batch_.signature));
-        string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
+        // string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
+        console2.log(unicode"════════════════════════════════════════════════════");
+        console2.log(unicode"═══ cast call ══════════════════════════════════════");
+        {
+          console2.log("cast call --trace");
+          console2.logAddress(batch_.to);
+          console2.log(batch_.value);
+          console2.logBytes(batch_.data);
+          console2.logBytes( "1 0 0 0 0 0 ");
+          console2.log(batch_.nonce);
+          console2.logBytes(batch_.signature);
+
+          console2.log("\nSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
+          console2.log("function execTransaction(address to,uint256 value,bytes calldata data,Enum.Operation operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address payable refundReceiver,bytes memory signatures)");
+        }
+        console2.log(unicode"════════════════════════════════════════════════════");
+
 
         // Send batch
-        (uint256 status, bytes memory data) = endpoint.post(
-            _getHeaders(),
-            payload
-        );
-
-        if (status == 201) {
-            console2.log("Batch sent successfully");
-        } else {
-            console2.log(string(data));
-            revert("Send batch failed!");
-        }
+        // (uint256 status, bytes memory data) = endpoint.post(
+        //     _getHeaders(),
+        //     payload
+        // );
+        // revert("STOP");
+        // if (status == 201) {
+        //     console2.log("Batch sent successfully");
+        // } else {
+        //     console2.log(string(data));
+        //     revert("Send batch failed!");
+        // }
     }
 
     // Computes the EIP712 hash of a Safe transaction.
