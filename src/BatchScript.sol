@@ -324,7 +324,7 @@ abstract contract BatchScript is Script, SetChains {
         //     _getHeaders(),
         //     payload
         // );
-        // revert("STOP");
+        // revert("STOP"); // STOP script, do not run txs (for debugging)
         // if (status == 201) {
         //     console2.log("Batch sent successfully");
         // } else {
