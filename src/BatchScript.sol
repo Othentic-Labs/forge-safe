@@ -54,7 +54,8 @@ abstract contract BatchScript is Script, SetChains {
     address private SAFE_MULTISEND_ADDRESS;
 
     // Chain ID, configured by chain.
-    uint256 private chainId;
+    uint256 private chainIdL1;
+    uint256 private chainIdL2;
 
     // Safe API base URL, configured by chain.
     string private SAFE_API_BASE_URL;
@@ -72,7 +73,8 @@ abstract contract BatchScript is Script, SetChains {
     bytes32 private constant LEDGER = keccak256("ledger");
 
     // Address to send transaction from
-    address private safe;
+    address private safeL1;
+    address private safeL2;
 
     enum Operation {
         CALL,
@@ -94,47 +96,48 @@ abstract contract BatchScript is Script, SetChains {
         bytes signature;
     }
 
-    bytes[] public encodedTxns;
+    bytes[] public encodedTxnsL1;
+    bytes[] public encodedTxnsL2;
 
     // Modifiers
 
     modifier isBatch(address safe_) {
         // Set the chain ID
         Chain memory chain = getChain(vm.envString("CHAIN"));
-        chainId = chain.chainId;
+        uint256 _chainId = chain.chainId;
 
         // Set the Safe API base URL and multisend address based on chain
-        if (chainId == 1) {
+        if (_chainId == 1) {
             SAFE_API_BASE_URL = "https://safe-transaction-mainnet.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 137) {
+        } else if (_chainId == 137) {
             SAFE_API_BASE_URL = "https://safe-transaction-polygon.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 5) {
+        } else if (_chainId == 5) {
             SAFE_API_BASE_URL = "https://safe-transaction-goerli.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 42161) {
+        } else if (_chainId == 42161) {
             SAFE_API_BASE_URL = "https://safe-transaction-arbitrum.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 43114) {
+        } else if (_chainId == 43114) {
             SAFE_API_BASE_URL = "https://safe-transaction-avalanche.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 17000) {
+        } else if (_chainId == 17000) {
             SAFE_API_BASE_URL = "https://transaction-holesky.holesky-safe.protofire.io/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 84532) {
+        } else if (_chainId == 84532) {
             SAFE_API_BASE_URL = "https://safe-transaction-base-sepolia.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 8453) {
+         } else if (_chainId == 8453) {
             SAFE_API_BASE_URL = "https://safe-transaction-base.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 5000) {
+         } else if (_chainId == 5000) {
             SAFE_API_BASE_URL = "https://safe-transaction-mantle.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 34443) {
+         } else if (_chainId == 34443) {
             SAFE_API_BASE_URL = "https://gateway.safe.optimism.io/v1/chains/34443/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 169) {
+         } else if (_chainId == 169) {
             SAFE_API_BASE_URL = "https://gateway.safe.manta.network/v1/chains/169/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else {
@@ -142,7 +145,7 @@ abstract contract BatchScript is Script, SetChains {
         }
 
         // Store the provided safe address
-        safe = safe_;
+        _chainId == 1 || _chainId == 17000 ? safeL1 = safe_ : safeL2 = safe_;
 
         // Load wallet information
         walletType = keccak256(abi.encodePacked(vm.envString("WALLET_TYPE")));
@@ -172,11 +175,21 @@ abstract contract BatchScript is Script, SetChains {
         uint256 value_,
         bytes memory data_
     ) internal returns (bytes memory) {
+        Chain memory _chain = getChain(vm.envString("CHAIN"));
+        uint256 _chainId = _chain.chainId;
+        address _safe;
+
         // Add transaction to batch array
-        encodedTxns.push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
+        if(_chainId == 1 || _chainId == 17000) {
+            _safe = safeL1;
+            encodedTxnsL1.push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
+        } else {
+            _safe = safeL2;
+            encodedTxnsL2.push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
+        }
 
         // Simulate transaction and get return value
-        vm.prank(safe);
+        vm.prank(_safe);
         (bool success, bytes memory data) = to_.call{value: value_}(data_);
         if (success) {
             return data;
@@ -189,10 +202,19 @@ abstract contract BatchScript is Script, SetChains {
     // 0 as the `value` (equivalent to msg.value) field.
     function addToBatch(address to_, bytes memory data_) internal returns (bytes memory) {
         // Add transaction to batch array
-        encodedTxns.push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
-
+        Chain memory _chain = getChain(vm.envString("CHAIN"));
+        uint256 _chainId = _chain.chainId;
+        address _safe;
+        // Add transaction to batch array
+        if(_chainId == 1 || _chainId == 17000) {
+            _safe = safeL1;
+            encodedTxnsL1.push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
+        } else {
+            _safe = safeL2;
+            encodedTxnsL2.push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
+        }
         // Simulate transaction and get return value
-        vm.prank(safe);
+        vm.prank(_safe);
         (bool success, bytes memory data) = to_.call(data_);
         if (success) {
             return data;
@@ -204,11 +226,14 @@ abstract contract BatchScript is Script, SetChains {
     // Simulate then send the batch to the Safe API. If `send_` is `false`, the
     // batch will only be simulated.
     function executeBatch(bool send_) internal returns (Batch memory batch) {
-        batch = _createBatch(safe);
+        Chain memory _chain = getChain(vm.envString("CHAIN"));
+        uint256 _chainId = _chain.chainId;
+        address _safe = _chainId == 1 || _chainId == 17000 ? safeL1 : safeL2;
+        batch = _createBatch(_safe);
         // _simulateBatch(safe, batch);
         if (send_) {
-            batch = _signBatch(safe, batch);
-            _sendBatch(safe, batch);
+            batch = _signBatch(_safe, batch);
+            _sendBatch(_safe, batch);
         }
     }
 
@@ -223,9 +248,12 @@ abstract contract BatchScript is Script, SetChains {
 
         // Encode the batch calldata. The list of transactions is tightly packed.
         bytes memory data;
-        uint256 len = encodedTxns.length;
+        Chain memory _chain = getChain(vm.envString("CHAIN"));
+        uint256 _chainId = _chain.chainId;        
+        bytes[] memory _encodedTxns = _chainId == 1 || _chainId == 17000 ? encodedTxnsL1 : encodedTxnsL2;
+        uint256 len = _encodedTxns.length;
         for (uint256 i; i < len; ++i) {
-            data = bytes.concat(data, encodedTxns[i]);
+            data = bytes.concat(data, _encodedTxns[i]);
         }
         batch.data = abi.encodeWithSignature("multiSend(bytes)", data);
 
@@ -289,7 +317,7 @@ abstract contract BatchScript is Script, SetChains {
     }
 
     function _sendBatch(address safe_, Batch memory batch_) private {
-        string memory endpoint = _getSafeAPIEndpoint(safe_);
+        // string memory endpoint = _getSafeAPIEndpoint(safe_);
 
         // Create json payload for API call to Gnosis transaction service
         string memory placeholder = "";
@@ -311,7 +339,7 @@ abstract contract BatchScript is Script, SetChains {
         console2.log(unicode"\n═════ cast call ══════════════════════════════════════");
         {
           string memory _callSig = "\"execTransaction(address,uint256,bytes calldata,Enum.Operation,uint256,uint256,uint256,address,address payable,bytes)\"";
-          string memory _populatedTx = string.concat("\ncast call --trace ", vm.toString(safe_), " ", _callSig, " ", vm.toString(batch_.to), " 0 ", vm.toString(batch_.data), " 1 0 0 0 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 ", vm.toString(batch_.signature), " --rpc-url ", vm.toString(block.chainid));
+          string memory _populatedTx = string.concat("\ncast call --trace ", vm.toString(safe_), " ", _callSig, " ", vm.toString(batch_.to), " 0 ", vm.toString(batch_.data), " 1 0 0 0 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 ", vm.toString(batch_.signature), " --rpc-url ", vm.toString(block.chainid), block.chainid == 1 || block.chainid == 17000 ? "" : " --gas-limit 326095" );
           console2.log(_populatedTx);
           console2.log("\n\tSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
           console2.log("\n\tmethod sig:\n\tfunction execTransaction(\n\t\taddress to,\n\t\tuint256 value,\n\t\tbytes calldata data,\n\t\tEnum.Operation operation,\n\t\tuint256 safeTxGas,\n\t\tuint256 baseGas,\n\t\tuint256 gasPrice,\n\t\taddress gasToken,\n\t\taddress payable refundReceiver,\n\t\tbytes memory signatures)");
@@ -339,13 +367,15 @@ abstract contract BatchScript is Script, SetChains {
     function _getTransactionHash(
         address safe_,
         Batch memory batch_
-    ) private view returns (bytes32) {
+    ) private returns (bytes32) {
+        Chain memory _chain = getChain(vm.envString("CHAIN"));
+        uint256 _chainId = _chain.chainId;  
         return
             keccak256(
                 abi.encodePacked(
                     hex"1901",
                     keccak256(
-                        abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, safe_)
+                        abi.encode(DOMAIN_SEPARATOR_TYPEHASH, _chainId, safe_)
                     ),
                     keccak256(
                         abi.encode(
@@ -371,6 +401,8 @@ abstract contract BatchScript is Script, SetChains {
         Batch memory batch_
     ) private returns (string memory) {
         // Create EIP712 structured data for the batch transaction to sign externally via cast
+        Chain memory _chain = getChain(vm.envString("CHAIN"));
+        uint256 _chainId = _chain.chainId;  
 
         // EIP712Domain Field Types
         string[] memory domainTypes = new string[](2);
@@ -435,7 +467,7 @@ abstract contract BatchScript is Script, SetChains {
         // Create the domain object
         string memory d = "domain";
         d.serialize("verifyingContract", safe_);
-        string memory domain = d.serialize("chainId", chainId);
+        string memory domain = d.serialize("chainId", _chainId);
 
         // Create the payload object
         string memory p = "payload";
@@ -491,22 +523,22 @@ abstract contract BatchScript is Script, SetChains {
         }
     }
 
-    function _getSafeAPIEndpoint(
-        address safe_
-    ) private view returns (string memory) {
-      if ( _isAnOptimismChain(chainId) ) return
-            string.concat(
-                _getOptimismSafeAPISendEndPoint(chainId),
-                vm.toString(safe_),
-                OP_SAFE_API_MULTISIG_SEND_SLUG
-            );
-        return
-            string.concat(
-                SAFE_API_BASE_URL,
-                vm.toString(safe_),
-                SAFE_API_MULTISIG_SEND
-            );
-    }
+    // function _getSafeAPIEndpoint(
+    //     address safe_
+    // ) private view returns (string memory) {
+    //   if ( _isAnOptimismChain(chainId) ) return
+    //         string.concat(
+    //             _getOptimismSafeAPISendEndPoint(chainId),
+    //             vm.toString(safe_),
+    //             OP_SAFE_API_MULTISIG_SEND_SLUG
+    //         );
+    //     return
+    //         string.concat(
+    //             SAFE_API_BASE_URL,
+    //             vm.toString(safe_),
+    //             SAFE_API_MULTISIG_SEND
+    //         );
+    // }
 
     function _getHeaders() private pure returns (string[] memory) {
         string[] memory headers = new string[](1);
