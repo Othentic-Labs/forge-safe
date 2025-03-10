@@ -230,6 +230,22 @@ abstract contract BatchScript is Script, SetChains {
         uint256 _chainId = _chain.chainId;
         address _safe = _chainId == 1 || _chainId == 17000 ? safeL1 : safeL2;
         batch = _createBatch(_safe);
+        console2.log(unicode"═════ Batch ═════════════════════════════════════════════════");
+
+        f script SignBatch --sig=\"simulate(address,(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,uint256,bytes32,bytes))\"
+        console2.log(batch.to);
+        console2.log(batch.value);
+        console2.logBytes(batch.data);
+        console2.log(uint8(batch.operation));
+        console2.log(batch.safeTxGas);
+        console2.log(batch.baseGas);
+        console2.log(batch.gasPrice);
+        console2.log(batch.gasToken);
+        console2.log(batch.refundReceiver);
+        console2.log(batch.nonce);
+        console2.logBytes32(batch.txHash);
+        console2.logBytes(batch.signature);
+
         // _simulateBatch(safe, batch);
         if (send_) {
             batch = _signBatch(_safe, batch);
@@ -269,6 +285,10 @@ abstract contract BatchScript is Script, SetChains {
         batch.txHash = _getTransactionHash(safe_, batch);
     }
 
+    function signBatch(address safe_, Batch memory _batch) public returns (Batch memory _signedBatch) {
+        _signedBatch = _signBatch(safe_, _batch);
+        _sendBatch(safe_, _signedBatch);
+    }
     function _signBatch(
         address safe_,
         Batch memory batch_
@@ -311,13 +331,13 @@ abstract contract BatchScript is Script, SetChains {
         bytes memory signature = vm.ffi(inputs);
 
         // Set the signature on the batch
-        batch_.signature = signature;
+        batch_.signature = bytes.concat(batch_.signature, signature);
 
         return batch_;
     }
 
     function _sendBatch(address safe_, Batch memory batch_) private {
-        // string memory endpoint = _getSafeAPIEndpoint(safe_);
+        string memory endpoint = _getSafeAPIEndpoint(safe_);
 
         // Create json payload for API call to Gnosis transaction service
         string memory placeholder = "";
@@ -333,9 +353,10 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("gasToken", address(0));
         placeholder.serialize("refundReceiver", address(0));
         placeholder.serialize("contractTransactionHash", vm.toString(batch_.txHash));
+        console2.log('[DEBUG](contractTransactionHash):', vm.toString(batch_.txHash));
         placeholder.serialize("safeTxHash", vm.toString(batch_.txHash));
         placeholder.serialize("signature", vm.toString(batch_.signature));
-        // string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
+        string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
         console2.log(unicode"\n═════ cast call ══════════════════════════════════════");
         {
           string memory _callSig = "\"execTransaction(address,uint256,bytes calldata,Enum.Operation,uint256,uint256,uint256,address,address payable,bytes)\"";
@@ -344,7 +365,8 @@ abstract contract BatchScript is Script, SetChains {
           console2.log("\n\tSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
           console2.log("\n\tmethod sig:\n\tfunction execTransaction(\n\t\taddress to,\n\t\tuint256 value,\n\t\tbytes calldata data,\n\t\tEnum.Operation operation,\n\t\tuint256 safeTxGas,\n\t\tuint256 baseGas,\n\t\tuint256 gasPrice,\n\t\taddress gasToken,\n\t\taddress payable refundReceiver,\n\t\tbytes memory signatures)");
         }
-        console2.log(unicode"══════════════════════════════════════════════════════");
+        console2.log(unicode"═════════════════════════════════════════════════════════════");
+
 
 
         // Send batch
@@ -352,7 +374,7 @@ abstract contract BatchScript is Script, SetChains {
         //     _getHeaders(),
         //     payload
         // );
-        // revert("STOP"); // STOP script, do not run txs (for debugging)
+        // // revert("STOP"); // STOP script, do not run txs (for debugging)
         // if (status == 201) {
         //     console2.log("Batch sent successfully");
         // } else {
@@ -523,22 +545,24 @@ abstract contract BatchScript is Script, SetChains {
         }
     }
 
-    // function _getSafeAPIEndpoint(
-    //     address safe_
-    // ) private view returns (string memory) {
-    //   if ( _isAnOptimismChain(chainId) ) return
-    //         string.concat(
-    //             _getOptimismSafeAPISendEndPoint(chainId),
-    //             vm.toString(safe_),
-    //             OP_SAFE_API_MULTISIG_SEND_SLUG
-    //         );
-    //     return
-    //         string.concat(
-    //             SAFE_API_BASE_URL,
-    //             vm.toString(safe_),
-    //             SAFE_API_MULTISIG_SEND
-    //         );
-    // }
+    function _getSafeAPIEndpoint(
+        address safe_
+    ) private returns (string memory) {
+      Chain memory _chain = getChain(vm.envString("CHAIN"));
+      uint256 _chainId = _chain.chainId;  
+      if ( _isAnOptimismChain(_chainId) ) return
+            string.concat(
+                _getOptimismSafeAPISendEndPoint(_chainId),
+                vm.toString(safe_),
+                OP_SAFE_API_MULTISIG_SEND_SLUG
+            );
+        return
+            string.concat(
+                SAFE_API_BASE_URL,
+                vm.toString(safe_),
+                SAFE_API_MULTISIG_SEND
+            );
+    }
 
     function _getHeaders() private pure returns (string[] memory) {
         string[] memory headers = new string[](1);
