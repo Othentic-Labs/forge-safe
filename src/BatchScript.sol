@@ -231,8 +231,6 @@ abstract contract BatchScript is Script, SetChains {
         address _safe = _chainId == 1 || _chainId == 17000 ? safeL1 : safeL2;
         batch = _createBatch(_safe);
         console2.log(unicode"═════ Batch ═════════════════════════════════════════════════");
-
-        f script SignBatch --sig=\"simulate(address,(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,uint256,bytes32,bytes))\"
         console2.log(batch.to);
         console2.log(batch.value);
         console2.logBytes(batch.data);
