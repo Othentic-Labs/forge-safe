@@ -285,7 +285,7 @@ abstract contract BatchScript is Script, SetChains {
 
     function signBatch(address safe_, Batch memory _batch) public returns (Batch memory _signedBatch) {
         _signedBatch = _signBatch(safe_, _batch);
-        _sendBatch(safe_, _signedBatch);
+        // _sendBatch(safe_, _signedBatch);
     }
     function _signBatch(
         address safe_,
@@ -357,14 +357,23 @@ abstract contract BatchScript is Script, SetChains {
         string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
         console2.log(unicode"\n═════ cast call ══════════════════════════════════════");
         {
-          string memory _callSig = "\"execTransaction(address,uint256,bytes calldata,Enum.Operation,uint256,uint256,uint256,address,address payable,bytes)\"";
-          string memory _populatedTx = string.concat("\ncast call --trace ", vm.toString(safe_), " ", _callSig, " ", vm.toString(batch_.to), " 0 ", vm.toString(batch_.data), " 1 0 0 0 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 ", vm.toString(batch_.signature), " --rpc-url ", vm.toString(block.chainid), block.chainid == 1 || block.chainid == 17000 ? "" : " --gas-limit 326095" );
+          string memory _executeSig = "\"execTransaction(address,uint256,bytes calldata,Enum.Operation,uint256,uint256,uint256,address,address payable,bytes)\"";
+          string memory _signSig = "--sig=\"signBatch(address,(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,uint256,bytes32,bytes))\" ";
+          string memory _populatedTx = string.concat("\ncast call --trace ", vm.toString(safe_), " ", _executeSig, " ", vm.toString(batch_.to), " 0 ", vm.toString(batch_.data), " 1 0 0 0 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 ", vm.toString(batch_.signature), " --rpc-url ", vm.toString(block.chainid), block.chainid == 1 || block.chainid == 17000 ? "" : " --gas-limit 326095" );
           console2.log(_populatedTx);
-          console2.log("\n\tSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
-          console2.log("\n\tmethod sig:\n\tfunction execTransaction(\n\t\taddress to,\n\t\tuint256 value,\n\t\tbytes calldata data,\n\t\tEnum.Operation operation,\n\t\tuint256 safeTxGas,\n\t\tuint256 baseGas,\n\t\tuint256 gasPrice,\n\t\taddress gasToken,\n\t\taddress payable refundReceiver,\n\t\tbytes memory signatures)");
+        console2.log(unicode"═════════════════════════════════════════════════════════════");
+          string memory _populatedSignatureCall = string.concat("forge script SignBatch " , _signSig, vm.toString(safe_), " \"(" ,vm.toString(batch_.to), ",0,", vm.toString(batch_.data), ",1,0,0,0,0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000,", vm.toString(batch_.nonce), ",", vm.toString(batch_.txHash),",", vm.toString(batch_.signature), ")\" --ledger");
+          console2.log(_populatedSignatureCall);
+        }
+        {
+        string memory _signSigWithPk = "--sig=\"signBatch(address,(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,uint256,bytes32,bytes), uint256)\" ";
+        console2.log(unicode"═════════════════════════════════════════════════════════════");
+          string memory _populatedSignatureCallPk = string.concat("forge script SignBatch " , _signSigWithPk, vm.toString(safe_), " \"(" ,vm.toString(batch_.to), ",0,", vm.toString(batch_.data), ",1,0,0,0,0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000,", vm.toString(batch_.nonce), ",", vm.toString(batch_.txHash),",", vm.toString(batch_.signature), ")\" PK ");
+          console2.log(_populatedSignatureCallPk);
         }
         console2.log(unicode"═════════════════════════════════════════════════════════════");
-
+      console2.log("\n\tSafe.sol: https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol#L111 ");
+          console2.log("\n\tmethod sig:\n\tfunction execTransaction(\n\t\taddress to,\n\t\tuint256 value,\n\t\tbytes calldata data,\n\t\tEnum.Operation operation,\n\t\tuint256 safeTxGas,\n\t\tuint256 baseGas,\n\t\tuint256 gasPrice,\n\t\taddress gasToken,\n\t\taddress payable refundReceiver,\n\t\tbytes memory signatures)");
 
 
         // Send batch
