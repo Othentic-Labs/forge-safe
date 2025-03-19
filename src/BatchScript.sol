@@ -62,7 +62,12 @@ abstract contract BatchScript is Script, SetChains{
     string private constant SAFE_API_MULTISIG_SEND = "/multisig-transactions/";
     string private MODE_SAFE_API_MULTISIG_SEND = "https://gateway.safe.optimism.io/v1/chains/34443/transactions/";
     string private MANTA_SAFE_API_MULTISIG_SEND = "https://gateway.safe.manta.network/v1/chains/169/transactions/";
+    string private ETH_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/1/transactions/";
+    string private ARBI_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/transactions/";
+    string private POLYGON_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/transactions/";
+    string private BASE_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/transactions/";
     string private OP_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
+    string private KEYPER_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
 
     // Wallet information
     bytes32 private walletType;
@@ -481,9 +486,9 @@ abstract contract BatchScript is Script, SetChains{
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
-      if ( _isAnOptimismChain(chainId) ) return
+      if ( _isAlternativeApi(chainId) ) return
             string.concat(
-                _getOptimismSafeAPISendEndPoint(chainId),
+                _getAlternativeApi(chainId),
                 vm.toString(safe_),
                 OP_SAFE_API_MULTISIG_SEND_SLUG
             );
@@ -501,12 +506,17 @@ abstract contract BatchScript is Script, SetChains{
         return headers;
     }
 
-    function _isAnOptimismChain(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 34443 || _chainId == 169;
+    function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
+        return _chainId == 34443 || _chainId == 169 || _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161;
     }
-    function _getOptimismSafeAPISendEndPoint(uint256 _chainId) private view returns (string memory) {
+
+    function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
         if (_chainId == 34443) return MODE_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 169) return MANTA_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 1) return ETH_KEYPER_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 137) return POLYGON_KEYPER_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 8453) return BASE_KEYPER_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
         else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }
