@@ -66,6 +66,7 @@ abstract contract BatchScript is Script, SetChains{
     string private ARBI_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/transactions/";
     string private POLYGON_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/transactions/";
     string private BASE_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/transactions/";
+    string private SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/transactions/";
     string private OP_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
     string private KEYPER_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
 
@@ -144,7 +145,7 @@ abstract contract BatchScript is Script, SetChains{
             SAFE_API_BASE_URL = "https://gateway.safe.manta.network/v1/chains/169/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else if (chainId == 11155111) {
-            SAFE_API_BASE_URL = "https://safe-transaction-sepolia.safe.global/api/v1/safes/";
+            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else {
             revert("Unsupported chain");
@@ -320,6 +321,7 @@ abstract contract BatchScript is Script, SetChains{
             _getHeaders(),
             payload
         );
+          console2.log('[DEBUG](status):', status);
 
         if (status == 201) {
             console2.log("Batch sent successfully");
@@ -489,6 +491,11 @@ abstract contract BatchScript is Script, SetChains{
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
+      console2.log('[DEBUG]():', string.concat(
+          _getAlternativeApi(chainId),
+          vm.toString(safe_),
+          OP_SAFE_API_MULTISIG_SEND_SLUG
+      ));
       if ( _isAlternativeApi(chainId) ) return
             string.concat(
                 _getAlternativeApi(chainId),
@@ -510,7 +517,7 @@ abstract contract BatchScript is Script, SetChains{
     }
 
     function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 34443 || _chainId == 169 || _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161;
+        return _chainId == 34443 || _chainId == 169 || _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111;
     }
 
     function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
@@ -520,6 +527,8 @@ abstract contract BatchScript is Script, SetChains{
         else if (_chainId == 137) return POLYGON_KEYPER_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 8453) return BASE_KEYPER_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 11155111) return SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND;
         else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }
