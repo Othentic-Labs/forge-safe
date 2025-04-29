@@ -138,6 +138,9 @@ abstract contract BatchScript is Script, SetChains{
          } else if (chainId == 169) {
             SAFE_API_BASE_URL = "https://gateway.safe.manta.network/v1/chains/169/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+         } else if (chainId == 56) {
+            SAFE_API_BASE_URL = "https://safe-transaction-bsc.safe.global/api/v1/safes/";
+            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else {
             revert("Unsupported chain");
         }
