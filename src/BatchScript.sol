@@ -147,6 +147,9 @@ abstract contract BatchScript is Script, SetChains{
          } else if (chainId == 11155111) {
             SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+         } else if (chainId == 56) {
+            SAFE_API_BASE_URL = "https://safe-transaction-bsc.safe.global/api/v1/safes/";
+            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
          } else {
             revert("Unsupported chain");
         }
@@ -491,11 +494,6 @@ abstract contract BatchScript is Script, SetChains{
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
-      console2.log('[DEBUG]():', string.concat(
-          _getAlternativeApi(chainId),
-          vm.toString(safe_),
-          OP_SAFE_API_MULTISIG_SEND_SLUG
-      ));
       if ( _isAlternativeApi(chainId) ) return
             string.concat(
                 _getAlternativeApi(chainId),
