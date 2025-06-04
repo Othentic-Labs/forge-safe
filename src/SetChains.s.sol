@@ -18,14 +18,10 @@ contract SetChains is Script {
 
   constructor() {
 
+    setChain("scroll", ChainData("Scroll", 534352, ""));
+
     setChain("mantle", ChainData("Mantle", 5000, ""));
     setChain("mantle_sepolia", ChainData("mantle_sepolia", 5003, ""));
-    
-    setChain("manta_sepolia", ChainData("manta_sepolia", 3441006, ""));
-    setChain("manta", ChainData("manta", 169, ""));
-    
-    setChain("mode_sepolia", ChainData("mode_sepolia", 919, ""));
-    setChain("mode", ChainData("mode", 34443, ""));
 
     setChain("geth", ChainData("geth", 1337, "http://localhost:8545"));
     setChain("othentic", ChainData("geth", 51001, "http://localhost:10002"));

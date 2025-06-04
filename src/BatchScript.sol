@@ -13,7 +13,7 @@ import {Surl} from "../lib/surl/src/Surl.sol";
 import "./SetChains.s.sol";
 
 // ⭐️ SCRIPT
-abstract contract BatchScript is Script, SetChains{
+abstract contract BatchScript is Script, SetChains {
     using stdJson for string;
     using Surl for *;
 
@@ -43,13 +43,13 @@ abstract contract BatchScript is Script, SetChains{
 
     // keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
-        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
+    0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     // keccak256(
     //     "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
     // );
     bytes32 private constant SAFE_TX_TYPEHASH =
-        0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
+    0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
 
     // Deterministic deployment address of the Gnosis Safe Multisend contract, configured by chain.
     address private SAFE_MULTISEND_ADDRESS;
@@ -60,15 +60,14 @@ abstract contract BatchScript is Script, SetChains{
     // Safe API base URL, configured by chain.
     string private SAFE_API_BASE_URL;
     string private constant SAFE_API_MULTISIG_SEND = "/multisig-transactions/";
-    string private MODE_SAFE_API_MULTISIG_SEND = "https://gateway.safe.optimism.io/v1/chains/34443/transactions/";
-    string private MANTA_SAFE_API_MULTISIG_SEND = "https://gateway.safe.manta.network/v1/chains/169/transactions/";
     string private ETH_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/1/transactions/";
     string private ARBI_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/transactions/";
     string private POLYGON_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/transactions/";
     string private BASE_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/transactions/";
     string private SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/transactions/";
-    string private OP_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
-    string private KEYPER_SAFE_API_MULTISIG_SEND_SLUG= "/propose";
+    string private SCROLL_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/534352/transactions/";
+    string private OP_SAFE_API_MULTISIG_SEND_SLUG = "/propose";
+    string private KEYPER_SAFE_API_MULTISIG_SEND_SLUG = "/propose";
 
     // Wallet information
     bytes32 private walletType;
@@ -132,25 +131,22 @@ abstract contract BatchScript is Script, SetChains{
         } else if (chainId == 84532) {
             SAFE_API_BASE_URL = "https://safe-transaction-base-sepolia.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 8453) {
+        } else if (chainId == 8453) {
             SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 5000) {
+        } else if (chainId == 5000) {
             SAFE_API_BASE_URL = "https://safe-transaction-mantle.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 34443) {
-            SAFE_API_BASE_URL = "https://gateway.safe.optimism.io/v1/chains/34443/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 169) {
-            SAFE_API_BASE_URL = "https://gateway.safe.manta.network/v1/chains/169/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 11155111) {
+        } else if (chainId == 11155111) {
             SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else if (chainId == 56) {
+        } else if (chainId == 56) {
             SAFE_API_BASE_URL = "https://safe-transaction-bsc.safe.global/api/v1/safes/";
             SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-         } else {
+        } else if (chainId == 534352) {
+            SAFE_API_BASE_URL = "https://safe-transaction-scroll.safe.global/api/v1/safes/";
+            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+        } else {
             revert("Unsupported chain");
         }
 
@@ -324,7 +320,7 @@ abstract contract BatchScript is Script, SetChains{
             _getHeaders(),
             payload
         );
-          console2.log('[DEBUG](status):', status);
+        console2.log('[DEBUG](status):', status);
 
         if (status == 201) {
             console2.log("Batch sent successfully");
@@ -342,28 +338,28 @@ abstract contract BatchScript is Script, SetChains{
     ) private view returns (bytes32) {
         return
             keccak256(
-                abi.encodePacked(
-                    hex"1901",
-                    keccak256(
-                        abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, safe_)
-                    ),
-                    keccak256(
-                        abi.encode(
-                            SAFE_TX_TYPEHASH,
-                            batch_.to,
-                            batch_.value,
-                            keccak256(batch_.data),
-                            batch_.operation,
-                            batch_.safeTxGas,
-                            batch_.baseGas,
-                            batch_.gasPrice,
-                            address(0),
-                            address(0),
-                            batch_.nonce
-                        )
+            abi.encodePacked(
+                hex"1901",
+                keccak256(
+                    abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, safe_)
+                ),
+                keccak256(
+                    abi.encode(
+                        SAFE_TX_TYPEHASH,
+                        batch_.to,
+                        batch_.value,
+                        keccak256(batch_.data),
+                        batch_.operation,
+                        batch_.safeTxGas,
+                        batch_.baseGas,
+                        batch_.gasPrice,
+                        address(0),
+                        address(0),
+                        batch_.nonce
                     )
                 )
-            );
+            )
+        );
     }
 
     function _getTypedData(
@@ -494,18 +490,18 @@ abstract contract BatchScript is Script, SetChains{
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
-      if ( _isAlternativeApi(chainId) ) return
+        if (_isAlternativeApi(chainId)) return
             string.concat(
-                _getAlternativeApi(chainId),
-                vm.toString(safe_),
-                OP_SAFE_API_MULTISIG_SEND_SLUG
-            );
+            _getAlternativeApi(chainId),
+            vm.toString(safe_),
+            OP_SAFE_API_MULTISIG_SEND_SLUG
+        );
         return
             string.concat(
-                SAFE_API_BASE_URL,
-                vm.toString(safe_),
-                SAFE_API_MULTISIG_SEND
-            );
+            SAFE_API_BASE_URL,
+            vm.toString(safe_),
+            SAFE_API_MULTISIG_SEND
+        );
     }
 
     function _getHeaders() private pure returns (string[] memory) {
@@ -515,18 +511,17 @@ abstract contract BatchScript is Script, SetChains{
     }
 
     function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 34443 || _chainId == 169 || _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111;
+        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111 || _chainId == 534352;
     }
 
     function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
-        if (_chainId == 34443) return MODE_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 169) return MANTA_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 1) return ETH_KEYPER_SAFE_API_MULTISIG_SEND;
+        if (_chainId == 1) return ETH_KEYPER_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 137) return POLYGON_KEYPER_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 8453) return BASE_KEYPER_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
         else if (_chainId == 11155111) return SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND;
+        else if (_chainId == 534352) return SCROLL_KEYPER_SAFE_API_MULTISIG_SEND;
+
         else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }
