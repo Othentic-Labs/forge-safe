@@ -315,6 +315,11 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("signature", vm.toString(batch_.signature));
         string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
 
+        console2.log('[DEBUG]: about to send payload to safe:');
+        console2.log(string(payload));
+        console2.log('[DEBUG]: about to send data to safe:');
+        console2.log(string(batch_.data));
+
         // Send batch
         (uint256 status, bytes memory data) = endpoint.post(
             _getHeaders(),
