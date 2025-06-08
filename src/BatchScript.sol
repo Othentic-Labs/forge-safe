@@ -182,6 +182,7 @@ abstract contract BatchScript is Script, SetChains {
         bytes memory data_
     ) internal returns (bytes memory) {
         // Add transaction to batch array
+        console2.log("Adding data to batch on blockchain id: ", block.chainid);
         chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
 
         // Simulate transaction and get return value
@@ -198,6 +199,7 @@ abstract contract BatchScript is Script, SetChains {
     // 0 as the `value` (equivalent to msg.value) field.
     function addToBatch(address to_, bytes memory data_) internal returns (bytes memory) {
         // Add transaction to batch array
+        console2.log("Adding data to batch on blockchain id: ", block.chainid);
         chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
 
         // Simulate transaction and get return value
@@ -233,6 +235,8 @@ abstract contract BatchScript is Script, SetChains {
         // Encode the batch calldata. The list of transactions is tightly packed.
         bytes memory data;
         uint256 len = chainIdToEncodedTxs[block.chainid].length;
+        console2.log("Creating batch tx on blockcahin id", block.chainid);
+        console2.log("Data length is ", len);
         for (uint256 i; i < len; ++i) {
             data = bytes.concat(data, chainIdToEncodedTxs[block.chainid][i]);
         }
