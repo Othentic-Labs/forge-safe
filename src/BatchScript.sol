@@ -100,7 +100,7 @@ abstract contract BatchScript is Script, SetChains {
         bytes signature;
     }
 
-    bytes[] public encodedTxns;
+    mapping (uint256 chainId => bytes[] encodedTxs) chainIdToEncodedTxs;
 
     // Modifiers
 
@@ -182,7 +182,7 @@ abstract contract BatchScript is Script, SetChains {
         bytes memory data_
     ) internal returns (bytes memory) {
         // Add transaction to batch array
-        encodedTxns.push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
+        chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
 
         // Simulate transaction and get return value
         vm.prank(safe);
@@ -198,7 +198,7 @@ abstract contract BatchScript is Script, SetChains {
     // 0 as the `value` (equivalent to msg.value) field.
     function addToBatch(address to_, bytes memory data_) internal returns (bytes memory) {
         // Add transaction to batch array
-        encodedTxns.push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
+        chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
 
         // Simulate transaction and get return value
         vm.prank(safe);
@@ -232,9 +232,9 @@ abstract contract BatchScript is Script, SetChains {
 
         // Encode the batch calldata. The list of transactions is tightly packed.
         bytes memory data;
-        uint256 len = encodedTxns.length;
+        uint256 len = chainIdToEncodedTxs[block.chainid].length;
         for (uint256 i; i < len; ++i) {
-            data = bytes.concat(data, encodedTxns[i]);
+            data = bytes.concat(data, chainIdToEncodedTxs[block.chainid][i]);
         }
         batch.data = abi.encodeWithSignature("multiSend(bytes)", data);
 
