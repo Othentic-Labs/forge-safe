@@ -511,7 +511,7 @@ abstract contract BatchScript is Script, SetChains {
     }
 
     function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111 || _chainId == 534352;
+        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111;
     }
 
     function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
