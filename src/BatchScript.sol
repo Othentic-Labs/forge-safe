@@ -235,8 +235,8 @@ abstract contract BatchScript is Script, SetChains {
         // Encode the batch calldata. The list of transactions is tightly packed.
         bytes memory data;
         uint256 len = chainIdToEncodedTxs[block.chainid].length;
+
         console2.log("Creating batch tx on blockcahin id", block.chainid);
-        console2.log("Data length is ", len);
         for (uint256 i; i < len; ++i) {
             data = bytes.concat(data, chainIdToEncodedTxs[block.chainid][i]);
         }
@@ -319,9 +319,9 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("signature", vm.toString(batch_.signature));
         string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
 
-        console2.log('[DEBUG]: about to send payload to safe:');
+        console2.log('[DEBUG]: About to send payload to safe:');
         console2.log(string(payload));
-        console2.log('[DEBUG]: about to send data to safe:');
+        console2.log('[DEBUG]: About to send data to safe:');
         console2.log(string(batch_.data));
 
         // Send batch
