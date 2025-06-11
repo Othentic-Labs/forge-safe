@@ -100,7 +100,7 @@ abstract contract BatchScript is Script, SetChains {
         bytes signature;
     }
 
-    bytes[] public encodedTxns;
+    mapping (uint256 chainId => bytes[] encodedTxs) chainIdToEncodedTxs;
 
     // Modifiers
 
@@ -182,7 +182,8 @@ abstract contract BatchScript is Script, SetChains {
         bytes memory data_
     ) internal returns (bytes memory) {
         // Add transaction to batch array
-        encodedTxns.push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
+        console2.log("Adding data to batch on blockchain id: ", block.chainid);
+        chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
 
         // Simulate transaction and get return value
         vm.prank(safe);
@@ -198,7 +199,8 @@ abstract contract BatchScript is Script, SetChains {
     // 0 as the `value` (equivalent to msg.value) field.
     function addToBatch(address to_, bytes memory data_) internal returns (bytes memory) {
         // Add transaction to batch array
-        encodedTxns.push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
+        console2.log("Adding data to batch on blockchain id: ", block.chainid);
+        chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, uint256(0), data_.length, data_));
 
         // Simulate transaction and get return value
         vm.prank(safe);
@@ -232,9 +234,11 @@ abstract contract BatchScript is Script, SetChains {
 
         // Encode the batch calldata. The list of transactions is tightly packed.
         bytes memory data;
-        uint256 len = encodedTxns.length;
+        uint256 len = chainIdToEncodedTxs[block.chainid].length;
+
+        console2.log("Creating batch tx on blockcahin id", block.chainid);
         for (uint256 i; i < len; ++i) {
-            data = bytes.concat(data, encodedTxns[i]);
+            data = bytes.concat(data, chainIdToEncodedTxs[block.chainid][i]);
         }
         batch.data = abi.encodeWithSignature("multiSend(bytes)", data);
 
@@ -314,6 +318,11 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("safeTxHash", vm.toString(batch_.txHash));
         placeholder.serialize("signature", vm.toString(batch_.signature));
         string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
+
+        console2.log('[DEBUG]: About to send payload to safe:');
+        console2.log(string(payload));
+        console2.log('[DEBUG]: About to send data to safe:');
+        console2.log(string(batch_.data));
 
         // Send batch
         (uint256 status, bytes memory data) = endpoint.post(
@@ -511,7 +520,7 @@ abstract contract BatchScript is Script, SetChains {
     }
 
     function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111 || _chainId == 534352;
+        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111;
     }
 
     function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
