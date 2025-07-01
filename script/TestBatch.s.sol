@@ -5,10 +5,7 @@ import {BatchScript} from "src/BatchScript.sol";
 
 interface ICrossChainBridge {
     /// @dev path_ = abi.encodePacked(remoteAddress, localAddress)
-    function setTrustedRemote(
-        uint16 srcChainId_,
-        bytes calldata path_
-    ) external;
+    function setTrustedRemote(uint16 srcChainId_, bytes calldata path_) external;
 }
 
 interface IKernel {
@@ -24,26 +21,19 @@ contract TestBatch is BatchScript {
 
     /// @notice The main script entrypoint
     function run(bool send_) external isBatch(0x84C0C005cF574D0e5C602EA7b366aE9c707381E0) {
-
         IKernel kernel = IKernel(0xDb7cf68154bd422dF5196D90285ceA057786b4c3);
         ICrossChainBridge bridge = ICrossChainBridge(localBridgeAddr);
 
         // Start batch
         // Install on kernel
         // kernel.executeAction(kernel.Action.ActivatePolicy, policy)
-        bytes memory txn1 = abi.encodeWithSelector(
-            IKernel.executeAction.selector,
-            2,
-            address(bridge)
-        );
+        bytes memory txn1 = abi.encodeWithSelector(IKernel.executeAction.selector, 2, address(bridge));
         addToBatch(address(kernel), 0, txn1);
 
         // Call some initialize function on the contract
         // bridge.setTrustedRemote(vm.envUint("CHAIN_ID"), abi.encodePacked(remoteBridgeAddr, localBridgeAddr));
         bytes memory txn2 = abi.encodeWithSignature(
-            "setTrustedRemote(uint16,bytes)",
-            lzChainId,
-            abi.encodePacked(remoteBridgeAddr, localBridgeAddr)
+            "setTrustedRemote(uint16,bytes)", lzChainId, abi.encodePacked(remoteBridgeAddr, localBridgeAddr)
         );
         addToBatch(address(bridge), txn2);
 
