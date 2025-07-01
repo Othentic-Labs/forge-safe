@@ -51,8 +51,8 @@ abstract contract BatchScript is Script, SetChains {
     bytes32 private constant SAFE_TX_TYPEHASH =
     0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
 
-    // Deterministic deployment address of the Gnosis Safe Multisend contract, configured by chain.
-    address private SAFE_MULTISEND_ADDRESS;
+    // Deterministic deployment address of the Gnosis Safe Multisend Call Only contract
+    address private constant SAFE_MULTISENDCALLONLY_ADDRESS = 0x40A2aCCbd92BCA938b02010E17A5b8929b49130D;
 
     // Chain ID, configured by chain.
     uint256 private chainId;
@@ -111,44 +111,29 @@ abstract contract BatchScript is Script, SetChains {
 
         // Set the Safe API base URL and multisend address based on chain
         if (chainId == 1) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-mainnet.safe.global/api/v1/safes/";
         } else if (chainId == 137) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-polygon.safe.global/api/v1/safes/";
         } else if (chainId == 5) {
             SAFE_API_BASE_URL = "https://safe-transaction-goerli.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 8453) {
             SAFE_API_BASE_URL = "https://safe-transaction-base.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 42161) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-arbitrum.safe.global/api/v1/safes/";
         } else if (chainId == 43114) {
             SAFE_API_BASE_URL = "https://safe-transaction-avalanche.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 17000) {
             SAFE_API_BASE_URL = "https://transaction-holesky.holesky-safe.protofire.io/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 84532) {
             SAFE_API_BASE_URL = "https://safe-transaction-base-sepolia.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 8453) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 5000) {
             SAFE_API_BASE_URL = "https://safe-transaction-mantle.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 11155111) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-sepolia.safe.global/api/v1/safes/";
         } else if (chainId == 56) {
             SAFE_API_BASE_URL = "https://safe-transaction-bsc.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 534352) {
             SAFE_API_BASE_URL = "https://safe-transaction-scroll.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else {
             revert("Unsupported chain");
         }
@@ -231,7 +216,7 @@ abstract contract BatchScript is Script, SetChains {
     // Encodes the stored encoded transactions into a single Multisend transaction
     function _createBatch(address safe_) private returns (Batch memory batch) {
         // Set initial batch fields
-        batch.to = SAFE_MULTISEND_ADDRESS;
+        batch.to = SAFE_MULTISENDCALLONLY_ADDRESS;
         batch.value = 0;
         batch.operation = Operation.DELEGATECALL;
 
@@ -504,12 +489,6 @@ abstract contract BatchScript is Script, SetChains {
     function _getSafeAPIEndpoint(
         address safe_
     ) private view returns (string memory) {
-        if (_isAlternativeApi(chainId)) return
-            string.concat(
-            _getAlternativeApi(chainId),
-            vm.toString(safe_),
-            OP_SAFE_API_MULTISIG_SEND_SLUG
-        );
         return
             string.concat(
             SAFE_API_BASE_URL,
@@ -522,20 +501,5 @@ abstract contract BatchScript is Script, SetChains {
         string[] memory headers = new string[](1);
         headers[0] = "Content-Type: application/json";
         return headers;
-    }
-
-    function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111;
-    }
-
-    function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
-        if (_chainId == 1) return ETH_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 137) return POLYGON_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 8453) return BASE_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 11155111) return SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 534352) return SCROLL_KEYPER_SAFE_API_MULTISIG_SEND;
-
-        else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }
