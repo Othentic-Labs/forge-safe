@@ -43,16 +43,15 @@ abstract contract BatchScript is Script, SetChains {
 
     // keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
-    0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
+        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     // keccak256(
     //     "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
     // );
-    bytes32 private constant SAFE_TX_TYPEHASH =
-    0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
+    bytes32 private constant SAFE_TX_TYPEHASH = 0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8;
 
-    // Deterministic deployment address of the Gnosis Safe Multisend contract, configured by chain.
-    address private SAFE_MULTISEND_ADDRESS;
+    // Deterministic deployment address of the Gnosis Safe Multisend Call Only contract
+    address private constant SAFE_MULTISENDCALLONLY_ADDRESS = 0x40A2aCCbd92BCA938b02010E17A5b8929b49130D;
 
     // Chain ID, configured by chain.
     uint256 private chainId;
@@ -60,12 +59,18 @@ abstract contract BatchScript is Script, SetChains {
     // Safe API base URL, configured by chain.
     string private SAFE_API_BASE_URL;
     string private constant SAFE_API_MULTISIG_SEND = "/multisig-transactions/";
-    string private ETH_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/1/transactions/";
-    string private ARBI_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/transactions/";
-    string private POLYGON_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/transactions/";
-    string private BASE_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/transactions/";
-    string private SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/transactions/";
-    string private SCROLL_KEYPER_SAFE_API_MULTISIG_SEND = "https://client-gateway-prod.keypersafe.xyz/v1/chains/534352/transactions/";
+    string private ETH_KEYPER_SAFE_API_MULTISIG_SEND =
+        "https://client-gateway-prod.keypersafe.xyz/v1/chains/1/transactions/";
+    string private ARBI_KEYPER_SAFE_API_MULTISIG_SEND =
+        "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/transactions/";
+    string private POLYGON_KEYPER_SAFE_API_MULTISIG_SEND =
+        "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/transactions/";
+    string private BASE_KEYPER_SAFE_API_MULTISIG_SEND =
+        "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/transactions/";
+    string private SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND =
+        "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/transactions/";
+    string private SCROLL_KEYPER_SAFE_API_MULTISIG_SEND =
+        "https://client-gateway-prod.keypersafe.xyz/v1/chains/534352/transactions/";
     string private OP_SAFE_API_MULTISIG_SEND_SLUG = "/propose";
     string private KEYPER_SAFE_API_MULTISIG_SEND_SLUG = "/propose";
 
@@ -100,7 +105,7 @@ abstract contract BatchScript is Script, SetChains {
         bytes signature;
     }
 
-    mapping (uint256 chainId => bytes[] encodedTxs) chainIdToEncodedTxs;
+    mapping(uint256 chainId => bytes[] encodedTxs) chainIdToEncodedTxs;
 
     // Modifiers
 
@@ -111,44 +116,29 @@ abstract contract BatchScript is Script, SetChains {
 
         // Set the Safe API base URL and multisend address based on chain
         if (chainId == 1) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-mainnet.safe.global/api/v1/safes/";
         } else if (chainId == 137) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/137/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-polygon.safe.global/api/v1/safes/";
         } else if (chainId == 5) {
             SAFE_API_BASE_URL = "https://safe-transaction-goerli.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 8453) {
             SAFE_API_BASE_URL = "https://safe-transaction-base.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 42161) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/42161/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-arbitrum.safe.global/api/v1/safes/";
         } else if (chainId == 43114) {
             SAFE_API_BASE_URL = "https://safe-transaction-avalanche.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 17000) {
             SAFE_API_BASE_URL = "https://transaction-holesky.holesky-safe.protofire.io/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 84532) {
             SAFE_API_BASE_URL = "https://safe-transaction-base-sepolia.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
-        } else if (chainId == 8453) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/8453/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 5000) {
             SAFE_API_BASE_URL = "https://safe-transaction-mantle.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 11155111) {
-            SAFE_API_BASE_URL = "https://client-gateway-prod.keypersafe.xyz/v1/chains/11155111/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
+            SAFE_API_BASE_URL = "https://safe-transaction-sepolia.safe.global/api/v1/safes/";
         } else if (chainId == 56) {
             SAFE_API_BASE_URL = "https://safe-transaction-bsc.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else if (chainId == 534352) {
             SAFE_API_BASE_URL = "https://safe-transaction-scroll.safe.global/api/v1/safes/";
-            SAFE_MULTISEND_ADDRESS = 0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761;
         } else {
             revert("Unsupported chain");
         }
@@ -179,11 +169,7 @@ abstract contract BatchScript is Script, SetChains {
     // - `value` as in msg.value, sent as a `uint256` (=> 32 bytes),
     // -  length of `data` as a `uint256` (=> 32 bytes),
     // - `data` as `bytes`.
-    function addToBatch(
-        address to_,
-        uint256 value_,
-        bytes memory data_
-    ) internal returns (bytes memory) {
+    function addToBatch(address to_, uint256 value_, bytes memory data_) internal returns (bytes memory) {
         // Add transaction to batch array
         console2.log("Adding data to batch on blockchain id: ", block.chainid);
         chainIdToEncodedTxs[block.chainid].push(abi.encodePacked(Operation.CALL, to_, value_, data_.length, data_));
@@ -231,7 +217,7 @@ abstract contract BatchScript is Script, SetChains {
     // Encodes the stored encoded transactions into a single Multisend transaction
     function _createBatch(address safe_) private returns (Batch memory batch) {
         // Set initial batch fields
-        batch.to = SAFE_MULTISEND_ADDRESS;
+        batch.to = SAFE_MULTISENDCALLONLY_ADDRESS;
         batch.value = 0;
         batch.operation = Operation.DELEGATECALL;
 
@@ -254,10 +240,7 @@ abstract contract BatchScript is Script, SetChains {
         batch.txHash = _getTransactionHash(safe_, batch);
     }
 
-    function _signBatch(
-        address safe_,
-        Batch memory batch_
-    ) private returns (Batch memory) {
+    function _signBatch(address safe_, Batch memory batch_) private returns (Batch memory) {
         // Get the typed data to sign
         string memory typedData = _getTypedData(safe_, batch_);
 
@@ -265,17 +248,9 @@ abstract contract BatchScript is Script, SetChains {
         string memory commandStart = "cast wallet sign ";
         string memory wallet;
         if (walletType == LOCAL) {
-            wallet = string.concat(
-                "--private-key ",
-                vm.toString(privateKey),
-                " "
-            );
+            wallet = string.concat("--private-key ", vm.toString(privateKey), " ");
         } else if (walletType == LEDGER) {
-            wallet = string.concat(
-                "--ledger --mnemonic-index ",
-                vm.toString(mnemonicIndex),
-                " "
-            );
+            wallet = string.concat("--ledger --mnemonic-index ", vm.toString(mnemonicIndex), " ");
         } else {
             revert("Unsupported wallet type");
         }
@@ -285,14 +260,7 @@ abstract contract BatchScript is Script, SetChains {
         string[] memory inputs = new string[](3);
         inputs[0] = "bash";
         inputs[1] = "-c";
-        inputs[2] = string.concat(
-            commandStart,
-            wallet,
-            commandEnd,
-            "'",
-            typedData,
-            "'"
-        );
+        inputs[2] = string.concat(commandStart, wallet, commandEnd, "'", typedData, "'");
         bytes memory signature = vm.ffi(inputs);
 
         // Set the signature on the batch
@@ -322,17 +290,14 @@ abstract contract BatchScript is Script, SetChains {
         placeholder.serialize("signature", vm.toString(batch_.signature));
         string memory payload = placeholder.serialize("sender", vm.addr(uint256(privateKey)));
 
-        console2.log('[DEBUG]: About to send payload to safe:');
+        console2.log("[DEBUG]: About to send payload to safe:");
         console2.log(string(payload));
-        console2.log('[DEBUG]: About to send data to safe:');
+        console2.log("[DEBUG]: About to send data to safe:");
         console2.log(string(batch_.data));
 
         // Send batch
-        (uint256 status, bytes memory data) = endpoint.post(
-            _getHeaders(),
-            payload
-        );
-        console2.log('[DEBUG](status):', status);
+        (uint256 status, bytes memory data) = endpoint.post(_getHeaders(), payload);
+        console2.log("[DEBUG](status):", status);
 
         if (status == 201) {
             console2.log("Batch sent successfully");
@@ -344,17 +309,11 @@ abstract contract BatchScript is Script, SetChains {
     // Computes the EIP712 hash of a Safe transaction.
     // Look at https://github.com/safe-global/safe-eth-py/blob/174053920e0717cc9924405e524012c5f953cd8f/gnosis/safe/safe_tx.py#L186
     // and https://github.com/safe-global/safe-eth-py/blob/master/gnosis/eth/eip712/__init__.py
-    function _getTransactionHash(
-        address safe_,
-        Batch memory batch_
-    ) private view returns (bytes32) {
-        return
-            keccak256(
+    function _getTransactionHash(address safe_, Batch memory batch_) private view returns (bytes32) {
+        return keccak256(
             abi.encodePacked(
                 hex"1901",
-                keccak256(
-                    abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, safe_)
-                ),
+                keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, safe_)),
                 keccak256(
                     abi.encode(
                         SAFE_TX_TYPEHASH,
@@ -374,10 +333,7 @@ abstract contract BatchScript is Script, SetChains {
         );
     }
 
-    function _getTypedData(
-        address safe_,
-        Batch memory batch_
-    ) private returns (string memory) {
+    function _getTypedData(address safe_, Batch memory batch_) private returns (string memory) {
         // Create EIP712 structured data for the batch transaction to sign externally via cast
 
         // EIP712Domain Field Types
@@ -457,9 +413,7 @@ abstract contract BatchScript is Script, SetChains {
         return payload;
     }
 
-    function _stripSlashQuotes(
-        string memory str_
-    ) private returns (string memory) {
+    function _stripSlashQuotes(string memory str_) private returns (string memory) {
         // Remove slash quotes from string
         string memory command = string.concat(
             "sed 's/",
@@ -485,57 +439,24 @@ abstract contract BatchScript is Script, SetChains {
     }
 
     function _getNonce(address safe_) private returns (uint256) {
-        string memory endpoint = string.concat(
-            _getSafeAPIEndpoint(safe_),
-            "?limit=1"
-        );
+        string memory endpoint = string.concat(_getSafeAPIEndpoint(safe_), "?limit=1");
         (uint256 status, bytes memory data) = endpoint.get();
         if (status == 200) {
             string memory resp = string(data);
-            string[] memory results;
-            results = resp.readStringArray(".results");
-            if (results.length == 0) return 0;
+            if (resp.readUint(".count") == 0) return 0;
             return resp.readUint(".results[0].nonce") + 1;
         } else {
             revert("Get nonce failed!");
         }
     }
 
-    function _getSafeAPIEndpoint(
-        address safe_
-    ) private view returns (string memory) {
-        if (_isAlternativeApi(chainId)) return
-            string.concat(
-            _getAlternativeApi(chainId),
-            vm.toString(safe_),
-            OP_SAFE_API_MULTISIG_SEND_SLUG
-        );
-        return
-            string.concat(
-            SAFE_API_BASE_URL,
-            vm.toString(safe_),
-            SAFE_API_MULTISIG_SEND
-        );
+    function _getSafeAPIEndpoint(address safe_) private view returns (string memory) {
+        return string.concat(SAFE_API_BASE_URL, vm.toString(safe_), SAFE_API_MULTISIG_SEND);
     }
 
     function _getHeaders() private pure returns (string[] memory) {
         string[] memory headers = new string[](1);
         headers[0] = "Content-Type: application/json";
         return headers;
-    }
-
-    function _isAlternativeApi(uint256 _chainId) private pure returns (bool) {
-        return _chainId == 1 || _chainId == 137 || _chainId == 8453 || _chainId == 42161 || _chainId == 11155111;
-    }
-
-    function _getAlternativeApi(uint256 _chainId) private view returns (string memory) {
-        if (_chainId == 1) return ETH_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 137) return POLYGON_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 8453) return BASE_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 42161) return ARBI_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 11155111) return SEPOLIA_KEYPER_SAFE_API_MULTISIG_SEND;
-        else if (_chainId == 534352) return SCROLL_KEYPER_SAFE_API_MULTISIG_SEND;
-
-        else revert("[getOptimisemishSafeAPISendEndPoint]: Unsupported chain");
     }
 }

@@ -18,18 +18,18 @@ contract TestAuthBatch is BatchScript {
 
         // Start batch
         // Give deployer minter admin role
-        addToBatch(address(rolesAdmin), 0, abi.encodeWithSelector(
-            IRolesAdmin.grantRole.selector,
-            bytes32("minter_admin"),
-            deployer
-        ));
+        addToBatch(
+            address(rolesAdmin),
+            0,
+            abi.encodeWithSelector(IRolesAdmin.grantRole.selector, bytes32("minter_admin"), deployer)
+        );
 
         // Give deployer burner admin role
-        addToBatch(address(rolesAdmin), 0, abi.encodeWithSelector(
-            IRolesAdmin.grantRole.selector,
-            bytes32("burner_admin"),
-            deployer
-        ));
+        addToBatch(
+            address(rolesAdmin),
+            0,
+            abi.encodeWithSelector(IRolesAdmin.grantRole.selector, bytes32("burner_admin"), deployer)
+        );
 
         // Execute batch
         executeBatch(send_);
