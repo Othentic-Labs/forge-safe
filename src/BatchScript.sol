@@ -443,9 +443,7 @@ abstract contract BatchScript is Script, SetChains {
         (uint256 status, bytes memory data) = endpoint.get();
         if (status == 200) {
             string memory resp = string(data);
-            string[] memory results;
-            results = resp.readStringArray(".results");
-            if (results.length == 0) return 0;
+            if (resp.readUint(".count") == 0) return 0;
             return resp.readUint(".results[0].nonce") + 1;
         } else {
             revert("Get nonce failed!");
