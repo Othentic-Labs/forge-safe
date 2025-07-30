@@ -139,6 +139,8 @@ abstract contract BatchScript is Script, SetChains {
             SAFE_API_BASE_URL = "https://safe-transaction-bsc.safe.global/api/v1/safes/";
         } else if (chainId == 534352) {
             SAFE_API_BASE_URL = "https://safe-transaction-scroll.safe.global/api/v1/safes/";
+        } else if (chainId == 59144) {
+            SAFE_API_BASE_URL = "https://safe-transaction-linea.safe.global/api/v1/safes/";
         } else {
             revert("Unsupported chain");
         }
